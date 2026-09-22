@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { loadTasks, saveTasks } from "./utils/taskStorage";
-
 import {
   BriefcaseBusiness,
   CalendarDays,
@@ -11,6 +9,7 @@ import {
   Inbox,
   ListTodo,
   Pencil,
+  Search,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -19,6 +18,11 @@ import { EditTaskModal } from "./components/EditTaskModal";
 import { TaskForm } from "./components/TaskForm";
 
 import type { Task, TaskCategory } from "./types/Task";
+
+import {
+  loadTasks,
+  saveTasks,
+} from "./utils/taskStorage";
 
 import "./App.css";
 
@@ -29,7 +33,10 @@ function App() {
 
   const [filter, setFilter] = useState<Filter>("all");
 
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] =
+    useState<Task | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     saveTasks(tasks);
@@ -48,7 +55,10 @@ function App() {
       category,
     };
 
-    setTasks((currentTasks) => [...currentTasks, newTask]);
+    setTasks((currentTasks) => [
+      ...currentTasks,
+      newTask,
+    ]);
   }
 
   function handleToggleTask(id: string) {
@@ -65,20 +75,28 @@ function App() {
   }
 
   function handleDeleteTask(id: string) {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+    setTasks((currentTasks) =>
+      currentTasks.filter(
+        (task) => task.id !== id,
+      ),
+    );
   }
 
   function handleUpdateTask(updatedTask: Task) {
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
-        task.id === updatedTask.id ? updatedTask : task,
+        task.id === updatedTask.id
+          ? updatedTask
+          : task,
       ),
     );
 
     setEditingTask(null);
   }
 
-  function getCategoryInfo(category: TaskCategory) {
+  function getCategoryInfo(
+    category: TaskCategory,
+  ) {
     switch (category) {
       case "study":
         return {
@@ -89,7 +107,9 @@ function App() {
       case "work":
         return {
           name: "Trabalho",
-          icon: <BriefcaseBusiness size={18} />,
+          icon: (
+            <BriefcaseBusiness size={18} />
+          ),
         };
 
       case "personal":
@@ -105,27 +125,45 @@ function App() {
       return "Sem data";
     }
 
-    return new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR", {
+    return new Date(
+      `${date}T00:00:00`,
+    ).toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
     });
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date()
+    .toISOString()
+    .split("T")[0];
 
-  const filteredTasks = tasks.filter((task) => {
-    if (filter === "today") {
-      return task.dueDate === today;
-    }
+  const filteredTasks = tasks.filter(
+    (task) => {
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(
+          searchTerm.toLowerCase(),
+        );
 
-    if (filter === "completed") {
-      return task.completed;
-    }
+      if (!matchesSearch) {
+        return false;
+      }
 
-    return true;
-  });
+      if (filter === "today") {
+        return task.dueDate === today;
+      }
 
-  const pendingTasks = tasks.filter((task) => !task.completed).length;
+      if (filter === "completed") {
+        return task.completed;
+      }
+
+      return true;
+    },
+  );
+
+  const pendingTasks = tasks.filter(
+    (task) => !task.completed,
+  ).length;
 
   return (
     <div className="app-layout">
@@ -140,19 +178,35 @@ function App() {
 
         <nav className="sidebar-menu">
           <button
-            className={filter === "all" ? "menu-item active" : "menu-item"}
-            onClick={() => setFilter("all")}
+            className={
+              filter === "all"
+                ? "menu-item active"
+                : "menu-item"
+            }
+            onClick={() =>
+              setFilter("all")
+            }
           >
             <Inbox size={19} />
 
-            <span>Todas as tarefas</span>
+            <span>
+              Todas as tarefas
+            </span>
 
-            <strong>{tasks.length}</strong>
+            <strong>
+              {tasks.length}
+            </strong>
           </button>
 
           <button
-            className={filter === "today" ? "menu-item active" : "menu-item"}
-            onClick={() => setFilter("today")}
+            className={
+              filter === "today"
+                ? "menu-item active"
+                : "menu-item"
+            }
+            onClick={() =>
+              setFilter("today")
+            }
           >
             <CalendarDays size={19} />
 
@@ -161,9 +215,13 @@ function App() {
 
           <button
             className={
-              filter === "completed" ? "menu-item active" : "menu-item"
+              filter === "completed"
+                ? "menu-item active"
+                : "menu-item"
             }
-            onClick={() => setFilter("completed")}
+            onClick={() =>
+              setFilter("completed")
+            }
           >
             <CheckCircle2 size={19} />
 
@@ -175,36 +233,72 @@ function App() {
       <main className="main-content">
         <header className="page-header">
           <div>
-            <p className="header-label">MINHAS TAREFAS</p>
+            <p className="header-label">
+              MINHAS TAREFAS
+            </p>
 
-            <h1>Organize seu dia</h1>
+            <h1>
+              Organize seu dia
+            </h1>
 
             <p>
-              Você possui <strong>{pendingTasks}</strong>{" "}
-              {pendingTasks === 1 ? "tarefa pendente." : "tarefas pendentes."}
+              Você possui{" "}
+              <strong>
+                {pendingTasks}
+              </strong>{" "}
+              {pendingTasks === 1
+                ? "tarefa pendente."
+                : "tarefas pendentes."}
             </p>
           </div>
 
           <div className="task-summary">
-            <span>{tasks.length}</span>
+            <span>
+              {tasks.length}
+            </span>
+
             <p>Total</p>
           </div>
         </header>
 
-        <TaskForm onAddTask={handleAddTask} />
+        <div className="search-container">
+          <Search size={19} />
+
+          <input
+            type="text"
+            placeholder="Pesquisar tarefas..."
+            value={searchTerm}
+            onChange={(event) =>
+              setSearchTerm(
+                event.target.value,
+              )
+            }
+          />
+        </div>
+
+        <TaskForm
+          onAddTask={handleAddTask}
+        />
 
         <section className="tasks-section">
           <div className="section-header">
             <div>
               <h2>
-                {filter === "all" && "Todas as tarefas"}
-                {filter === "today" && "Tarefas de hoje"}
-                {filter === "completed" && "Tarefas concluídas"}
+                {filter === "all" &&
+                  "Todas as tarefas"}
+
+                {filter === "today" &&
+                  "Tarefas de hoje"}
+
+                {filter ===
+                  "completed" &&
+                  "Tarefas concluídas"}
               </h2>
 
               <p>
                 {filteredTasks.length}{" "}
-                {filteredTasks.length === 1
+                {filteredTasks.length ===
+                1
                   ? "tarefa encontrada"
                   : "tarefas encontradas"}
               </p>
@@ -212,75 +306,124 @@ function App() {
           </div>
 
           <div className="task-list">
-            {filteredTasks.length === 0 ? (
+            {filteredTasks.length ===
+            0 ? (
               <div className="empty-state">
-                <CheckCircle2 size={42} />
+                <CheckCircle2
+                  size={42}
+                />
 
-                <h3>Nenhuma tarefa por aqui</h3>
+                <h3>
+                  Nenhuma tarefa por aqui
+                </h3>
 
-                <p>Adicione uma nova tarefa para começar.</p>
+                <p>
+                  Adicione uma nova
+                  tarefa para começar.
+                </p>
               </div>
             ) : (
-              filteredTasks.map((task) => {
-                const category = getCategoryInfo(task.category);
+              filteredTasks.map(
+                (task) => {
+                  const category =
+                    getCategoryInfo(
+                      task.category,
+                    );
 
-                return (
-                  <article
-                    className={`task-card ${task.completed ? "completed" : ""}`}
-                    key={task.id}
-                  >
-                    <button
-                      className="complete-button"
-                      onClick={() => handleToggleTask(task.id)}
-                      title={
+                  return (
+                    <article
+                      className={`task-card ${
                         task.completed
-                          ? "Marcar como pendente"
-                          : "Marcar como concluída"
-                      }
+                          ? "completed"
+                          : ""
+                      }`}
+                      key={task.id}
                     >
-                      {task.completed ? (
-                        <CheckCircle2 size={24} />
-                      ) : (
-                        <Circle size={24} />
-                      )}
-                    </button>
+                      <button
+                        className="complete-button"
+                        onClick={() =>
+                          handleToggleTask(
+                            task.id,
+                          )
+                        }
+                        title={
+                          task.completed
+                            ? "Marcar como pendente"
+                            : "Marcar como concluída"
+                        }
+                      >
+                        {task.completed ? (
+                          <CheckCircle2
+                            size={24}
+                          />
+                        ) : (
+                          <Circle
+                            size={24}
+                          />
+                        )}
+                      </button>
 
-                    <div className="task-content">
-                      <h3>{task.title}</h3>
+                      <div className="task-content">
+                        <h3>
+                          {task.title}
+                        </h3>
 
-                      <div className="task-details">
-                        <span className="category">
-                          {category.icon}
-                          {category.name}
-                        </span>
+                        <div className="task-details">
+                          <span className="category">
+                            {
+                              category.icon
+                            }
 
-                        <span className="date">
-                          <CalendarDays size={16} />
-                          {formatDate(task.dueDate)}
-                        </span>
+                            {
+                              category.name
+                            }
+                          </span>
+
+                          <span className="date">
+                            <CalendarDays
+                              size={16}
+                            />
+
+                            {formatDate(
+                              task.dueDate,
+                            )}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="task-actions">
-                      <button
-                        className="edit-button"
-                        onClick={() => setEditingTask(task)}
-                        title="Editar tarefa"
-                      >
-                        <Pencil size={18} />
-                      </button>
+                      <div className="task-actions">
+                        <button
+                          className="edit-button"
+                          onClick={() =>
+                            setEditingTask(
+                              task,
+                            )
+                          }
+                          title="Editar tarefa"
+                        >
+                          <Pencil
+                            size={18}
+                          />
+                        </button>
 
-                      <button
-                        className="delete-button"
-                        onClick={() => handleDeleteTask(task.id)}
-                        title="Excluir tarefa"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </article>
-                );
-              })
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDeleteTask(
+                              task.id,
+                            )
+                          }
+                          title="Excluir tarefa"
+                        >
+                          <Trash2
+                            size={18}
+                          />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                },
+              )
             )}
           </div>
         </section>
@@ -289,8 +432,12 @@ function App() {
       {editingTask && (
         <EditTaskModal
           task={editingTask}
-          onClose={() => setEditingTask(null)}
-          onSave={handleUpdateTask}
+          onClose={() =>
+            setEditingTask(null)
+          }
+          onSave={
+            handleUpdateTask
+          }
         />
       )}
     </div>
