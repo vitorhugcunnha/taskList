@@ -1,122 +1,247 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  CheckCircle2,
+  Circle,
+  GraduationCap,
+  Inbox,
+  ListTodo,
+  UserRound,
+} from "lucide-react";
+
+import { TaskForm } from "./components/TaskForm";
+
+import type { Task, TaskCategory } from "./types/Task";
+
+import "./App.css";
+
+type Filter = "all" | "today" | "completed";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const [filter, setFilter] = useState<Filter>("all");
+
+  function handleAddTask(
+    title: string,
+    dueDate: string,
+    category: TaskCategory,
+  ) {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      title,
+      completed: false,
+      dueDate,
+      category,
+    };
+
+    setTasks((currentTasks) => [...currentTasks, newTask]);
+  }
+
+  function handleToggleTask(id: string) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === id
+          ? {
+              ...task,
+              completed: !task.completed,
+            }
+          : task,
+      ),
+    );
+  }
+
+  function getCategoryInfo(category: TaskCategory) {
+    switch (category) {
+      case "study":
+        return {
+          name: "Estudo",
+          icon: <GraduationCap size={18} />,
+        };
+
+      case "work":
+        return {
+          name: "Trabalho",
+          icon: <BriefcaseBusiness size={18} />,
+        };
+
+      case "personal":
+        return {
+          name: "Pessoal",
+          icon: <UserRound size={18} />,
+        };
+    }
+  }
+
+  function formatDate(date: string) {
+    if (!date) {
+      return "Sem data";
+    }
+
+    return new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+    });
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "today") {
+      return task.dueDate === today;
+    }
+
+    if (filter === "completed") {
+      return task.completed;
+    }
+
+    return true;
+  });
+
+  const pendingTasks = tasks.filter((task) => !task.completed).length;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-layout">
+      <aside className="sidebar">
+        <div className="logo">
+          <div className="logo-icon">
+            <ListTodo size={24} />
+          </div>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <span>TaskList</span>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <nav className="sidebar-menu">
+          <button
+            className={filter === "all" ? "menu-item active" : "menu-item"}
+            onClick={() => setFilter("all")}
+          >
+            <Inbox size={19} />
+
+            <span>Todas as tarefas</span>
+
+            <strong>{tasks.length}</strong>
+          </button>
+
+          <button
+            className={filter === "today" ? "menu-item active" : "menu-item"}
+            onClick={() => setFilter("today")}
+          >
+            <CalendarDays size={19} />
+
+            <span>Hoje</span>
+          </button>
+
+          <button
+            className={
+              filter === "completed" ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setFilter("completed")}
+          >
+            <CheckCircle2 size={19} />
+
+            <span>Concluídas</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main className="main-content">
+        <header className="page-header">
+          <div>
+            <p className="header-label">MINHAS TAREFAS</p>
+            <h1>Organize seu dia</h1>
+            <p>
+              Você possui <strong>{pendingTasks}</strong>{" "}
+              {pendingTasks === 1 ? "tarefa pendente." : "tarefas pendentes."}
+            </p>
+          </div>
+
+          <div className="task-summary">
+            <span>{tasks.length}</span>
+
+            <p>Total</p>
+          </div>
+        </header>
+
+        <TaskForm onAddTask={handleAddTask} />
+
+        <section className="tasks-section">
+          <div className="section-header">
+            <div>
+              <h2>
+                {filter === "all" && "Todas as tarefas"}
+
+                {filter === "today" && "Tarefas de hoje"}
+
+                {filter === "completed" && "Tarefas concluídas"}
+              </h2>
+
+              <p>
+                {filteredTasks.length}{" "}
+                {filteredTasks.length === 1
+                  ? "tarefa encontrada"
+                  : "tarefas encontradas"}
+              </p>
+            </div>
+          </div>
+
+          <div className="task-list">
+            {filteredTasks.length === 0 ? (
+              <div className="empty-state">
+                <CheckCircle2 size={42} />
+
+                <h3>Nenhuma tarefa por aqui</h3>
+
+                <p>Adicione uma nova tarefa para começar.</p>
+              </div>
+            ) : (
+              filteredTasks.map((task) => {
+                const category = getCategoryInfo(task.category);
+
+                return (
+                  <article
+                    className={`task-card ${task.completed ? "completed" : ""}`}
+                    key={task.id}
+                  >
+                    <button
+                      className="complete-button"
+                      onClick={() => handleToggleTask(task.id)}
+                    >
+                      {task.completed ? (
+                        <CheckCircle2 size={24} />
+                      ) : (
+                        <Circle size={24} />
+                      )}
+                    </button>
+
+                    <div className="task-content">
+                      <h3>{task.title}</h3>
+
+                      <div className="task-details">
+                        <span className="category">
+                          {category.icon}
+
+                          {category.name}
+                        </span>
+
+                        <span className="date">
+                          <CalendarDays size={16} />
+
+                          {formatDate(task.dueDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
