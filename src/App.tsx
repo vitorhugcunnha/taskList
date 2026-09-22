@@ -8,10 +8,12 @@ import {
   GraduationCap,
   Inbox,
   ListTodo,
+  Pencil,
   Trash2,
   UserRound,
 } from "lucide-react";
 
+import { EditTaskModal } from "./components/EditTaskModal";
 import { TaskForm } from "./components/TaskForm";
 
 import type { Task, TaskCategory } from "./types/Task";
@@ -24,6 +26,8 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const [filter, setFilter] = useState<Filter>("all");
+
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   function handleAddTask(
     title: string,
@@ -55,7 +59,19 @@ function App() {
   }
 
   function handleDeleteTask(id: string) {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => task.id !== id),
+    );
+  }
+
+  function handleUpdateTask(updatedTask: Task) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task,
+      ),
+    );
+
+    setEditingTask(null);
   }
 
   function getCategoryInfo(category: TaskCategory) {
@@ -156,16 +172,19 @@ function App() {
         <header className="page-header">
           <div>
             <p className="header-label">MINHAS TAREFAS</p>
+
             <h1>Organize seu dia</h1>
+
             <p>
               Você possui <strong>{pendingTasks}</strong>{" "}
-              {pendingTasks === 1 ? "tarefa pendente." : "tarefas pendentes."}
+              {pendingTasks === 1
+                ? "tarefa pendente."
+                : "tarefas pendentes."}
             </p>
           </div>
 
           <div className="task-summary">
             <span>{tasks.length}</span>
-
             <p>Total</p>
           </div>
         </header>
@@ -177,9 +196,7 @@ function App() {
             <div>
               <h2>
                 {filter === "all" && "Todas as tarefas"}
-
                 {filter === "today" && "Tarefas de hoje"}
-
                 {filter === "completed" && "Tarefas concluídas"}
               </h2>
 
@@ -207,12 +224,19 @@ function App() {
 
                 return (
                   <article
-                    className={`task-card ${task.completed ? "completed" : ""}`}
+                    className={`task-card ${
+                      task.completed ? "completed" : ""
+                    }`}
                     key={task.id}
                   >
                     <button
                       className="complete-button"
                       onClick={() => handleToggleTask(task.id)}
+                      title={
+                        task.completed
+                          ? "Marcar como pendente"
+                          : "Marcar como concluída"
+                      }
                     >
                       {task.completed ? (
                         <CheckCircle2 size={24} />
@@ -237,13 +261,23 @@ function App() {
                       </div>
                     </div>
 
-                    <button
-                      className="delete-button"
-                      onClick={() => handleDeleteTask(task.id)}
-                      title="Excluir tarefa"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="task-actions">
+                      <button
+                        className="edit-button"
+                        onClick={() => setEditingTask(task)}
+                        title="Editar tarefa"
+                      >
+                        <Pencil size={18} />
+                      </button>
+
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDeleteTask(task.id)}
+                        title="Excluir tarefa"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </article>
                 );
               })
@@ -251,6 +285,14 @@ function App() {
           </div>
         </section>
       </main>
+
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={handleUpdateTask}
+        />
+      )}
     </div>
   );
 }
