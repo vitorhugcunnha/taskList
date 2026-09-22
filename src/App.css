@@ -387,3 +387,27 @@
     justify-content: center;
   }
 }
+
+.delete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #9ca3af;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.delete-button:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}

@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Inbox,
   ListTodo,
+  Trash2,
   UserRound,
 } from "lucide-react";
 
@@ -51,6 +52,10 @@ function App() {
           : task,
       ),
     );
+  }
+
+  function handleDeleteTask(id: string) {
+    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
   }
 
   function getCategoryInfo(category: TaskCategory) {
@@ -222,17 +227,23 @@ function App() {
                       <div className="task-details">
                         <span className="category">
                           {category.icon}
-
                           {category.name}
                         </span>
 
                         <span className="date">
                           <CalendarDays size={16} />
-
                           {formatDate(task.dueDate)}
                         </span>
                       </div>
                     </div>
+
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDeleteTask(task.id)}
+                      title="Excluir tarefa"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </article>
                 );
               })
