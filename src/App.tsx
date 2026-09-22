@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { loadTasks, saveTasks } from "./utils/taskStorage";
 
 import {
   BriefcaseBusiness,
@@ -23,11 +25,15 @@ import "./App.css";
 type Filter = "all" | "today" | "completed";
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(loadTasks);
 
   const [filter, setFilter] = useState<Filter>("all");
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    saveTasks(tasks);
+  }, [tasks]);
 
   function handleAddTask(
     title: string,
@@ -59,9 +65,7 @@ function App() {
   }
 
   function handleDeleteTask(id: string) {
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.id !== id),
-    );
+    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
   }
 
   function handleUpdateTask(updatedTask: Task) {
@@ -177,9 +181,7 @@ function App() {
 
             <p>
               Você possui <strong>{pendingTasks}</strong>{" "}
-              {pendingTasks === 1
-                ? "tarefa pendente."
-                : "tarefas pendentes."}
+              {pendingTasks === 1 ? "tarefa pendente." : "tarefas pendentes."}
             </p>
           </div>
 
@@ -224,9 +226,7 @@ function App() {
 
                 return (
                   <article
-                    className={`task-card ${
-                      task.completed ? "completed" : ""
-                    }`}
+                    className={`task-card ${task.completed ? "completed" : ""}`}
                     key={task.id}
                   >
                     <button
