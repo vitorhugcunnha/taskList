@@ -19,7 +19,6 @@ concurrency:
 jobs:
   build:
     name: Build application
-
     runs-on: ubuntu-latest
 
     steps:
@@ -52,14 +51,28 @@ jobs:
         with:
           path: ./dist
 
+  production-approval:
+    name: Production approval
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    steps:
+      - name: Production approved
+        run: echo "Production deployment approved"
+
   deploy:
     name: Deploy application
+
+    needs:
+      - build
+      - production-approval
 
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    needs: build
 
     runs-on: ubuntu-latest
 

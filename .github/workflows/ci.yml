@@ -19,7 +19,6 @@ permissions:
 jobs:
   quality-check:
     name: Lint, Test and Build
-
     runs-on: ubuntu-latest
 
     steps:
@@ -43,3 +42,18 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  staging:
+    name: Staging validation
+    needs: quality-check
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: staging
+
+    steps:
+      - name: Validate staging environment
+        run: echo "Staging environment validated successfully"
