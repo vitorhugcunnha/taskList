@@ -237,9 +237,7 @@ function App() {
               MINHAS TAREFAS
             </p>
 
-            <h1>
-              Organize seu dia
-            </h1>
+            <h1>Organize suas tarefas</h1>
 
             <p>
               Você possui{" "}
