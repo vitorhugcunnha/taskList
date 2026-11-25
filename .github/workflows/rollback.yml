@@ -1,0 +1,91 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build rollback version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout selected release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+  production-approval:
+    name: Production approval
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    steps:
+      - name: Production approved
+        run: echo "Rollback approved"
+
+  deploy:
+    name: Deploy rollback
+    needs:
+      - build
+      - production-approval
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy rollback version
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  mark-latest:
+    name: Mark release as latest
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mark selected release as Latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ inputs.tag }}" --latest
